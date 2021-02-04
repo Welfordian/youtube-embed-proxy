@@ -35,6 +35,12 @@
         let frame = document.querySelector('iframe');
 
         frame.src = 'https://www.youtube.com/embed/' + window.location.hash.replace('#', '') + '?autoplay=1';
+
+        document.onkeyup = (e) => {
+            if (e.keyCode === 27) {
+                window.close();
+            }
+        }
     </script>
 </body>
 </html>
