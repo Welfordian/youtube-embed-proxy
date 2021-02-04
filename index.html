@@ -30,6 +30,8 @@
     <div id="player"></div>
 
     <script>
+        import {ipcRenderer} from 'electron';
+
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
@@ -88,9 +90,9 @@
       }
     }
 
-    window.addEventListener('message', () => {
-        console.log(arguments);
-    });
+    ipcRenderer.on('open-window', (e, d) => {
+        console.log(d);
+    })
     </script>
   </body>
 </html>
