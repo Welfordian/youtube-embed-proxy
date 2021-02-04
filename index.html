@@ -30,7 +30,7 @@
     <div id="player"></div>
 
     <script>
-        import {ipcRenderer} from 'electron';
+        const ipcRenderer = require('electron').ipcRenderer;
 
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
