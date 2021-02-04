@@ -32,6 +32,8 @@
     <script>
         const ipcRenderer = require('electron').ipcRenderer;
 
+        let queue = [];
+
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
@@ -66,8 +68,17 @@
 
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.PLAYING && !done) {
-          setTimeout(stopVideo, 6000);
           done = true;
+        }
+
+        if (event.data === 0) {
+            if (queue.length > 0) {
+                let videoId = queue[0];
+
+                queue.shift();
+
+                player.loadVideoById(videoId);
+            }
         }
       }
       function stopVideo() {
@@ -91,7 +102,9 @@
     }
 
     ipcRenderer.on('open-window', (e, d) => {
-        console.log(d);
+        let id = d.url.replace('https://welfordian.github.io/youtube-embed-proxy/#', '');
+
+        queue.push(id);
     })
     </script>
   </body>
