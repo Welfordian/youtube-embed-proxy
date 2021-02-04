@@ -9,10 +9,20 @@
                 height: 100%;
                 overflow: hidden;
             }
+
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
         </style>
     </head>
   <body>
+      <div class="overlay"></div>
     <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+
     <div id="player"></div>
 
     <script>
@@ -47,6 +57,7 @@
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
       var done = false;
+
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.PLAYING && !done) {
           setTimeout(stopVideo, 6000);
@@ -56,6 +67,22 @@
       function stopVideo() {
         player.stopVideo();
       }
+
+      document.onkeyup = (e) => {
+        if (e.keyCode === 27) {
+            window.close();
+        }
+
+        if (e.keyCode === 32) {
+            var state = player.getPlayerState();
+
+            if(state == 1){
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
+      }
+    }
     </script>
   </body>
 </html>
