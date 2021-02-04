@@ -16,9 +16,20 @@
             height: 100%;
             overflow: hidden;
         }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: transparent;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body style="-webkit-app-region: drag">
+    <div class="overlay"></div>
     <iframe frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
     <script>
