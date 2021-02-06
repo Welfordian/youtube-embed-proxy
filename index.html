@@ -1,111 +1,662 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            * {
-                -webkit-app-region: drag;
-            }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.0.2/tailwind.min.css" integrity="sha512-+WF6UMXHki/uCy0vATJzyA9EmAcohIQuwpNz0qEO+5UeE5ibPejMRdFuARSrl1trs3skqie0rY/gNiolfaef5w==" crossorigin="anonymous" />
+    <style>
+        html, body, #app, iframe {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; 
+        }
 
-            html, body, iframe {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
+        input[type="range"]:focus {
+            outline: none;
+        }
 
-            .overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-            }
-        </style>
-    </head>
-  <body>
-      <div class="overlay"></div>
-    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+        input[type='range'] {
+          -webkit-transition: .2s ease-in-out;
+            -moz-transition: .2s ease-in-out;
+            -o-transition: .2s ease-in-out;
+            transition: .2s ease-in-out;
+           
+            -webkit-appearance: none;
+            background-color: darkgrey;
+            height: 5px;
+        }
 
-    <div id="player"></div>
+        input[type='range']::-webkit-slider-thumb {
+            -webkit-transition: .2s ease-in-out;
+            -moz-transition: .2s ease-in-out;
+            -o-transition: .2s ease-in-out;
+            transition: .2s ease-in-out;
+            width: 10px;
+            -webkit-appearance: none;
+            height: 5px;
+            background: white;
+            cursor: pointer;
+            position: relative;
+            top: 0px;
+            z-index: 10;
+        }
+        
+        input[type=range]:hover::-webkit-slider-thumb{
+          top: 0px;
+          height: 20px;
+          width: 20px;
+        }
 
+
+        #nav-icon {
+            width: 25px;
+            height: 20px;
+            position: relative;
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+            -webkit-transition: .5s ease-in-out;
+            -moz-transition: .5s ease-in-out;
+            -o-transition: .5s ease-in-out;
+            transition: .5s ease-in-out;
+            cursor: pointer;
+        }
+
+        #nav-icon span {
+            display: block;
+            position: absolute;
+            height: 4px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 9px;
+            opacity: 1;
+            left: 0;
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+            -webkit-transition: .25s ease-in-out;
+            -moz-transition: .25s ease-in-out;
+            -o-transition: .25s ease-in-out;
+            transition: .25s ease-in-out;
+        }
+
+        #nav-icon span:nth-child(1) {
+            top: 0px;
+            -webkit-transform-origin: left center;
+            -moz-transform-origin: left center;
+            -o-transform-origin: left center;
+            transform-origin: left center;
+        }
+
+        #nav-icon span:nth-child(2) {
+            top: 7px;
+            -webkit-transform-origin: left center;
+            -moz-transform-origin: left center;
+            -o-transform-origin: left center;
+            transform-origin: left center;
+        }
+
+        #nav-icon span:nth-child(3) {
+            top: 14px;
+            -webkit-transform-origin: left center;
+            -moz-transform-origin: left center;
+            -o-transform-origin: left center;
+            transform-origin: left center;
+        }
+
+        #nav-icon.open span:nth-child(1) {
+            -webkit-transform: rotate(45deg);
+            -moz-transform: rotate(45deg);
+            -o-transform: rotate(45deg);
+            transform: rotate(45deg);
+            top: -3px;
+            left: 0px;
+        }
+
+        #nav-icon.open span:nth-child(2) {
+            width: 0%;
+            opacity: 0;
+        }
+
+        #nav-icon.open span:nth-child(3) {
+            -webkit-transform: rotate(-45deg);
+            -moz-transform: rotate(-45deg);
+            -o-transform: rotate(-45deg);
+            transform: rotate(-45deg);
+            top: 15px;
+            left: 0px;
+        }
+
+        .overlay {
+            transition: opacity 0.3s;
+            -webkit-transition: opacity 0.3s;
+        }
+
+        .controls {
+            background-color: rgba(0, 0, 0, 0.84);
+        }
+
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity .3s;
+        }
+        .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+            opacity: 0;
+        }
+
+        #video_container {
+            position: absolute;
+            top: 0;
+            z-index: -1;
+        }
+
+        .volumeControl input {
+            width: 0px;
+            overflow: hidden;
+            margin-right: 1.5rem;
+        }
+
+        .volumeControl:hover input {
+            overflow: visible;
+            width: 5rem;
+        }
+
+        .playbackSpeed {
+            top: -16.55rem;
+            background: rgba(0, 0, 0, 0.84);
+            min-width: 9rem;
+            padding: 1rem;
+            left: -4rem;
+        }
+    </style>
+    <title>YouTube Embed Proxy</title>
+</head>
+<body>
+    <div id="app" @mousemove="showOverlay" @mouseleave="hideOverlay">
+        <div id="video_container"></div>
+
+        <transition name="fade">
+            <div v-show="overlayShown" class="overlay fixed top-0 left-0 h-full w-full flex flex-col">
+                <div class="w-full flex justify-between controls pb-2">
+                    <div class="text-white text-xl ml-4 mt-2 flex items-center">
+                        <i class="fas fa-grip-vertical cursor-move" style="-webkit-app-region: drag;"></i>
+    
+                        <p class="ml-4 text-sm">{{ currentTitle | truncate(60) }}</p>
+                    </div>
+    
+                    <div class="text-white text-xl mr-4 mt-4">
+                        <i @click="toggleAlwaysOnTop" class="fas fa-thumbtack" :class="{'transform rotate-45': ! alwaysOnTop}"></i>
+                    </div>
+                </div>
+    
+                <div class="flex flex-grow" @click="togglePlayback" @dblClick="toggleFullScreen">
+    
+                </div>
+                
+                <div class="w-full flex-col self-end pt-4 px-4 controls">
+                    <transition name="fade">
+                        <div class="w-full mb-5" v-if="navOpen">
+                            <div class="flex" v-if="(currentQueueIndex + 1) < queue.length">
+                                <div class="flex flex-col">
+                                    <p class="text-white ml-2 mb-1">Up Next</p>
+                                    
+                                    <div class="flex">
+                                        <div class="mx-2">
+                                            <img @click="skipToQueueIndex(currentQueueIndex + 1)" class="border border-white cursor-pointer" width="120" height="90" :src="'https://img.youtube.com/vi/' + queue[currentQueueIndex + 1] + '/sddefault.jpg'" />
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                <div class="flex flex-col" v-if="(currentQueueIndex + 2) < queue.length">
+                                    <p class="text-white mb-1 ml-2">Queued</p>
+                                    
+                                    <div class="flex">
+                                        <div class="mx-2" v-for="(item, index) in queue" v-if="(index - 1) > currentQueueIndex">
+                                            <img @click="skipToQueueIndex(index)" class="border border-white cursor-pointer" width="120" height="90" :src="'https://img.youtube.com/vi/' + item + '/sddefault.jpg'" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+    
+                            <div v-else>
+                                <p class="text-white">No items left in queue.</p>
+                            </div>
+                        </div>
+                    </transition>
+
+                    <div class="flex flex-grow items-center">
+                        <input class="w-full" @mousedown="seeking = true" @mouseup="seeking = false" @change="seekVideo" type="range" v-model="playerCurrentTime" :max="playerTotalTime" step="1">
+                    </div>
+    
+                    <div class="w-full flex justify-between text-white py-2 pb-2">
+                        <div class="flex items-center">
+                            <div>
+                                <i class="fas fa-backward text-xl mr-4" :class="{'text-gray-400 cursor-not-allowed': ! hasPreviousVideo, 'cursor-pointer': hasPreviousVideo}" @click="playPreviousVideo"></i>
+                            </div>
+                            <div>
+                                <i class="fas fa-play text-xl cursor-pointer" v-if="! playing" @click="player.playVideo()"></i>
+                                <i class="fas fa-pause text-xl cursor-pointer" v-if="playing" @click="player.pauseVideo()"></i>
+                            </div>
+                            <div>
+                                <i class="fas fa-forward text-xl ml-4" :class="{'text-gray-400 cursor-not-allowed': ! hasNextVideo, 'cursor-pointer': hasNextVideo}" @click="playNextVideo"></i>
+                            </div>
+    
+                            <div class="flex items-center text-white ml-4 volumeControl">
+                                <i @click="toggleVolume" class="fas mr-4 text-xl w-8" :class="'fa-' + volumeIcon"></i>
+    
+                                <input @input="controlVolume" v-model="playerVolume" min="0" max="100" type="range" />
+                            </div>
+                        </div>
+    
+                        <div class="flex items-center">
+                            <div class="relative text-white text-xl cursor-pointer">
+                                <i class="fas fa-tachometer-alt" @click="playbackOptionsOpen = ! playbackOptionsOpen"></i>
+    
+                                <div class="playbackSpeed absolute text-sm" v-if="playbackOptionsOpen">
+                                    <p class="mb-2">Playback Speed</p>
+    
+                                    <table>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === .25"></i></td>
+                                            <td @click="setPlaybackSpeed(.25)">0.25</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === .5"></i></td>
+                                            <td @click="setPlaybackSpeed(.5)">0.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === .75"></i></td>
+                                            <td @click="setPlaybackSpeed(.75)">0.75</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === 1"></i></td>
+                                            <td @click="setPlaybackSpeed(1)">1.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === 1.25"></i></td>
+                                            <td @click="setPlaybackSpeed(1.25)">1.25</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === 1.50"></i></td>
+                                            <td @click="setPlaybackSpeed(1.50)">1.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === 1.75"></i></td>
+                                            <td @click="setPlaybackSpeed(1.75)">1.75</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-check mr-3" v-if="playbackSpeed === 2.00"></i></td>
+                                            <td @click="setPlaybackSpeed(2)">2.00</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <i :class="{'text-white': captions, 'text-gray-400': ! captions}" @click="toggleCaptions" class="fas fa-closed-captioning text-xl cursor-pointer"></i>
+                            </div>
+    
+                            <div class="ml-4">
+                                <div @click="toggleNav" id="nav-icon" :class="{'open': navOpen}">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                </div>
+    
+                                <div class="ml-4 text-white text-xl cursor-pointer">
+                                    <i class="fas fa-expand" @click="toggleFullScreen" v-if="! isFullScreen"></i>
+                                    <i class="fas fa-compress" @click="toggleFullScreen" v-if="isFullScreen"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
     <script>
-        const ipcRenderer = require('electron').ipcRenderer;
+        Vue.filter('truncate', function (value, limit) {
+            if (value.length > limit) {
+                value = value.substring(0, (limit)) + '...';
+            }
 
-        let queue = [];
-
-      // 2. This code loads the IFrame Player API code asynchronously.
-      var tag = document.createElement('script');
-
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          height: '390',
-          width: '640',
-          videoId: window.location.hash.replace('#', ''),
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-          }
+            return value
         });
-      }
 
-      // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        event.target.playVideo();
-      }
+        new Vue({
+            el: '#app',
 
-      // 5. The API calls this function when the player's state changes.
-      //    The function indicates that when playing a video (state=1),
-      //    the player should play for six seconds and then stop.
-      var done = false;
+            data() {
+                return {
+                    alwaysOnTop: true,
+                    overlayShownTimeout: setTimeout.prototype,
+                    overlayShown: false,
+                    captions: true,
+                    seeking: false,
+                    playing: false,
+                    navOpen: false,
+                    loaded: false,
+                    player: null,
+                    currentQueueIndex: 0,
+                    queue: [],
+                    seekTimer: setInterval.prototype,
+                    playerTotalTime: 0,
+                    playerCurrentTime: 0,
+                    playerProgress: 0,
+                    currentTitle: '',
+                    playerVolume: 0,
+                    cachedVolume: 0,
+                    isFullScreen: false,
+                    playbackOptionsOpen: false,
+                    playbackSpeed: 1,
+                    waitForIframeInterval: setInterval.prototype,
+                }
+            },
 
-      function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING && !done) {
-          done = true;
-        }
+            methods: {
+                toggleAlwaysOnTop() {
+                    this.alwaysOnTop = ! this.alwaysOnTop;
 
-        if (event.data === 0) {
-            if (queue.length > 0) {
-                let videoId = queue[0];
+                    ipcRenderer.send('youtube-player::toggleAlwaysOnTop', {alwaysOnTop: this.alwaysOnTop});
+                },
 
-                queue.shift();
+                toggleNav() {
+                    this.navOpen = ! this.navOpen;
+                },
 
-                player.loadVideoById(videoId);
+                hideOverlay(e) {
+                    this.overlayShown = false;
+                },
+
+                showOverlay(e) {
+                    this.overlayShown = true;
+
+                    clearTimeout(this.overlayShownTimeout);
+
+                    this.overlayShownTimeout = setTimeout(() => {
+                        let containsControls = false;
+
+                        document.querySelectorAll('.controls').forEach(el => {
+                            if (e.path.includes(el)) {
+                                containsControls = true;
+                            }
+                        })
+
+                        if (! containsControls) {
+                            this.overlayShown = false;
+                        }
+                    }, 1500);
+                },
+
+                skipToQueueIndex(index) {
+                    this.currentQueueIndex = index;
+
+                    this.player.loadVideoById(this.queue[index]);
+                },
+
+                setPlaybackSpeed(speed) {
+                    this.playbackSpeed = speed;
+
+                    this.player.setPlaybackRate(this.playbackSpeed);
+                },
+
+                toggleFullScreen() {
+                    if (this.isFullScreen) {
+                        document.webkitExitFullscreen();
+                    } else { 
+                        document.querySelector('body').webkitRequestFullscreen();
+                    }
+                },
+
+                toggleVolume() {
+                    if (this.playerVolume > 0) {
+                        this.cachedVolume = this.playerVolume;
+
+                        this.playerVolume = 0;
+
+                        this.player.setVolume(this.playerVolume);
+                    } else {
+                        this.playerVolume = this.cachedVolume;
+                        this.cachedVolume = 0;
+
+                        this.player.setVolume(this.playerVolume);
+                    }
+                },
+
+                seekForward() {
+                    this.player.seekTo(this.playerCurrentTime + 5);
+                },
+
+                seekBackward() {
+                    this.player.seekTo(this.playerCurrentTime - 5);
+                },
+
+                volumeUp() {
+                    this.playerVolume = this.playerVolume + 10;
+
+                    this.player.setVolume(this.playerVolume);
+                },
+
+                volumeDown() {
+                    this.playerVolume = this.playerVolume - 10;
+
+                    this.player.setVolume(this.playerVolume);
+                },
+
+                controlVolume(e) {
+                    this.playerVolume = e.target.value;
+
+                    this.player.setVolume(this.playerVolume);
+                },
+
+                toggleCaptions() {
+                    this.captions = ! this.captions;
+
+                    if (this.captions) {
+                        this.player.loadModule('captions');
+                    } else {
+                        this.player.unloadModule('captions');
+                    }
+                },
+
+                seekVideo(e) {
+                    this.player.seekTo(e.target.value);
+                },
+
+                queuePush(videoId) {
+                    this.queue.push(videoId);
+                },
+
+                togglePlayback() {
+                    if (this.playing) {
+                        this.player.pauseVideo();
+                    } else {
+                        this.player.playVideo();
+                    }
+                },
+
+                playNextVideo() {
+                    if (this.hasNextVideo) {
+                        let videoId = this.queue[(this.currentQueueIndex + 1)];
+
+                        this.currentQueueIndex = (this.currentQueueIndex + 1);
+
+                        this.player.loadVideoById(videoId);
+                    }
+                },
+
+                playPreviousVideo() {
+                    if (this.hasPreviousVideo) {
+                        let videoId = this.queue[(this.currentQueueIndex - 1)];
+
+                        this.currentQueueIndex = (this.currentQueueIndex - 1);
+
+                        this.player.loadVideoById(videoId);
+                    }
+                },
+
+                onYouTubeIframeAPIReady() {
+                    this.player = new YT.Player('video_container', {
+                        height: '390',
+                        width: '640',
+                        videoId: window.location.hash.replace('#', ''),
+                        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, cc_load_policy: 1, rel: 0, showinfo: 0, ecver: 2, playsinline: 1 },
+                        events: {
+                            'onReady': this.onPlayerReady,
+                            'onStateChange': this.onPlayerStateChange
+                        }
+                    });
+
+                    this.queue.unshift(window.location.hash.replace('#', ''));
+                },
+
+                onPlayerReady(event) {
+                    this.player.playVideo();
+
+                    this.playerVolume = this.player.getVolume();
+                },
+
+                onPlayerStateChange(event) {
+                    if (event.data === -1 || event.data === 0 || event.data === 2) {
+                        this.playing = false;
+                    } else {
+                        this.playing = true;
+
+                        if (this.currentTitle !== this.player.playerInfo.videoData.title && this.player.playerInfo.videoData.title.length !== 0) {
+                            console.log(this.player.playerInfo.videoData.title);
+                            this.currentTitle = this.player.playerInfo.videoData.title;
+                        }
+
+                        this.playerTotalTime = this.player.getDuration();
+
+                        this.seekTimer = setInterval(() => {
+                            let playerCurrentTime = this.player.getCurrentTime();
+
+                            let playerTimeDifference = (playerCurrentTime / this.playerTotalTime) * 100;
+
+
+                            this.$set(this, 'playerProgress', playerTimeDifference);
+                            
+                            if (! this.seeking) {
+                                this.$set(this, 'playerCurrentTime', playerCurrentTime);
+                            }
+                        }, 1000); 
+                    }
+
+                    if (event.data == YT.PlayerState.PLAYING && !this.loaded) {
+                        this.loaded = true;
+                    }
+
+                    if (event.data === 0) {
+                        this.playNextVideo();
+                    }
+                }
+            },
+
+            mounted() {
+                window.onYouTubeIframeAPIReady = this.onYouTubeIframeAPIReady;
+
+                this.waitForIframeInterval = setInterval(() => {
+                    if (document.querySelectorAll('iframe').length > 0) {
+                        clearInterval(this.waitForIframeInterval);
+
+                        document.querySelector('iframe').setAttribute('webkitAllowFullScreen', true);
+                    }
+                }, 50);
+
+                document.onwebkitfullscreenchange = (e => {
+                    this.isFullScreen = document.webkitIsFullScreen;
+                });
+
+                document.onkeyup = (e => {
+                    if (e.keyCode === 32) {
+                        if (this.togglePlayback());
+                    }
+                });
+
+                document.onkeydown = (e => {
+                    if (e.keyCode === 39) {
+                        this.seekForward();
+                    }
+
+                    if (e.keyCode === 37) {
+                        this.seekBackward();
+                    }
+
+                    if (e.keyCode === 38) {
+                        this.volumeUp();
+                    }
+
+                    if (e.keyCode === 40) {
+                        this.volumeDown();
+                    }
+                });
+
+                if ('require' in window) {
+                    this.ipcRenderer = require('electron').ipcRenderer;
+
+                    window.ipcRenderer = this.ipcRenderer;
+                } else {
+                    const ipcRenderer = {
+                        queue: {},
+
+                        send(event, data) {
+                            if (event in this.queue) {
+                                this.queue[event]('', data);
+                            }
+                        },
+
+                        on(event, cb) {
+                            this.queue[event] = cb;
+                        }
+                    };
+
+                    this.ipcRenderer = ipcRenderer;
+                }
+
+                this.ipcRenderer.on('open-window', (e, d) => {
+                    let id = d.url.substring(d.url.indexOf('#')+1);
+
+                    this.queue.push(id);
+                });
+
+                this.ipcRenderer.on('youtube::playPause', () => {
+                    this.togglePlayback();
+                });
+            },
+
+            computed: {
+                volumeIcon() {
+                    if (this.playerVolume >= 50) {
+                        return 'volume-up';
+                    } else if (this.playerVolume < 50 && this.playerVolume > 0) {
+                        return 'volume-down';
+                    } else {
+                        return 'volume-mute';
+                    }
+                },
+
+                hasPreviousVideo() {
+                    return this.currentQueueIndex > 0;
+                },
+
+                hasNextVideo() {
+                    return (this.queue.length - 1) > this.currentQueueIndex;
+                },
             }
-        }
-      }
-      function stopVideo() {
-        player.stopVideo();
-      }
-
-      document.onkeyup = (e) => {
-        if (e.keyCode === 27) {
-            window.close();
-        }
-
-        if (e.keyCode === 32) {
-            var state = player.getPlayerState();
-
-            if(state == 1){
-                player.pauseVideo();
-            } else {
-                player.playVideo();
-            }
-      }
-    }
-
-    ipcRenderer.on('open-window', (e, d) => {
-        let id = d.url.replace('https://welfordian.github.io/youtube-embed-proxy/#', '');
-
-        queue.push(id);
-    })
+        })
     </script>
-  </body>
+</body>
 </html>
