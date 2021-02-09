@@ -211,7 +211,7 @@
                                     <p class="text-white ml-2 mb-1">Up Next</p>
                                     
                                     <div class="flex">
-                                        <div class="mx-2">
+                                        <div class="mx-2 w-28">
                                             <img @click="skipToQueueIndex(currentQueueIndex + 1)" class="border border-white cursor-pointer" width="120" height="90" :src="'https://img.youtube.com/vi/' + queue[currentQueueIndex + 1] + '/sddefault.jpg'" />
                                         </div>
                                     </div>
@@ -220,8 +220,8 @@
                                 <div class="flex flex-col" v-if="(currentQueueIndex + 2) < queue.length">
                                     <p class="text-white mb-1 ml-2">Queued</p>
                                     
-                                    <div class="flex">
-                                        <div class="mx-2" v-for="(item, index) in queue" v-if="(index - 1) > currentQueueIndex">
+                                    <div class="flex overflow-auto">
+                                        <div class="mx-2 w-28" v-for="(item, index) in queue" v-if="(index - 1) > currentQueueIndex">
                                             <img @click="skipToQueueIndex(index)" class="border border-white cursor-pointer" width="120" height="90" :src="'https://img.youtube.com/vi/' + item + '/sddefault.jpg'" />
                                         </div>
                                     </div>
@@ -326,6 +326,7 @@
     </div>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script>
         Vue.filter('truncate', function (value, limit) {
             if (value.length > limit) {
@@ -508,18 +509,39 @@
                 },
 
                 onYouTubeIframeAPIReady() {
-                    this.player = new YT.Player('video_container', {
-                        height: '390',
-                        width: '640',
-                        videoId: window.location.hash.replace('#', ''),
-                        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, cc_load_policy: 1, rel: 0, showinfo: 0, ecver: 2, playsinline: 1 },
-                        events: {
-                            'onReady': this.onPlayerReady,
-                            'onStateChange': this.onPlayerStateChange
-                        }
-                    });
+                    let query = JSON.parse('{"' + decodeURI((window.location.search.replace('?', '')).replace(/&/g, "\",\"").replace(/=/g,"\":\"")) + '"}');
 
-                    this.queue.unshift(window.location.hash.replace('#', ''));
+                    if ('playlist' in query) {
+                        axios.get("https://www.googleapis.com/youtube/v3/playlistItems?maxResults=50&part=snippet&fields=items(snippet(resourceId))&key=AIzaSyAij1eQqsldBTcpmyFCdqinmox72Gp6niE&playlistId=" + query.playlist).then(({data}) => {
+                            this.player = new YT.Player('video_container', {
+                                height: '390',
+                                width: '640',
+                                videoId: data.items[0].snippet.resourceId.videoId,
+                                playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, cc_load_policy: 1, rel: 0, showinfo: 0, ecver: 2, playsinline: 1 },
+                                events: {
+                                    'onReady': this.onPlayerReady,
+                                    'onStateChange': this.onPlayerStateChange
+                                }
+                            });
+
+                            data.items.forEach(i => {
+                                this.queue.push(i.snippet.resourceId.videoId);
+                            })
+                        });
+                    } else if ('video' in query) {
+                        this.player = new YT.Player('video_container', {
+                            height: '390',
+                            width: '640',
+                            videoId: query.video,
+                            playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, cc_load_policy: 1, rel: 0, showinfo: 0, ecver: 2, playsinline: 1 },
+                            events: {
+                                'onReady': this.onPlayerReady,
+                                'onStateChange': this.onPlayerStateChange
+                            }
+                        });
+
+                        this.queue.unshift(query.video);
+                    }
                 },
 
                 onPlayerReady(event) {
@@ -627,9 +649,19 @@
                 }
 
                 this.ipcRenderer.on('open-window', (e, d) => {
-                    let id = d.url.substring(d.url.indexOf('#')+1);
+                    let query = JSON.parse('{"' + decodeURI(((new URL(d.url).search).replace('?', '')).replace(/&/g, "\",\"").replace(/=/g,"\":\"")) + '"}');
 
-                    this.queue.push(id);
+                    console.log(d, query);
+
+                    if ('playlist' in query) {
+                        axios.get("https://www.googleapis.com/youtube/v3/playlistItems?maxResults=50&part=snippet&fields=items(snippet(resourceId))&key=AIzaSyAij1eQqsldBTcpmyFCdqinmox72Gp6niE&playlistId=" + query.playlist).then(({data}) => {
+                            data.items.forEach(i => {
+                                this.queue.push(i.snippet.resourceId.videoId);
+                            })
+                        });
+                    } else if ('video' in query) {
+                        this.queue.push(query.video);
+                    }
                 });
 
                 this.ipcRenderer.on('youtube::playPause', () => {
